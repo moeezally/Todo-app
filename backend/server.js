@@ -6,6 +6,8 @@ const connectDB= require('./config/db')
 const {errorHandler} = require('./middleware/errorMiddleware')
 
 const todoRoutes = require('./routes/todoRoutes')
+const userRoutes = require('./routes/userRoutes')
+
 
 connectDB()
 
@@ -16,6 +18,8 @@ app.use(express.json())
 app.use(express.urlencoded({extended:false}))
 
 app.use('/api/todo', todoRoutes)
+app.use('/api/user', userRoutes)
+
 
 app.use(errorHandler)
 

@@ -1,5 +1,6 @@
 const asyncHandler = require ('express-async-handler')
 const Todo =require('../models/todoModel')
+const User =require('../models/userModel')
 
 
 
@@ -8,7 +9,7 @@ const Todo =require('../models/todoModel')
 // @access  Public
 const getTodos = asyncHandler(async(req, res) => {
 
-    const todos = await Todo.find()
+    const todos = await Todo.find({user:req.user.id})
     res.status(200).json(todos)
 })
 
@@ -23,7 +24,8 @@ const addTodo = asyncHandler(async(req, res) => {
     }
 
     const todo = await Todo.create({
-        task:req.body.todo.task
+        task:req.body.todo.task,
+        user:req.user.id
     })
 
     res.status(200).json(todo)
@@ -40,9 +42,23 @@ const updateTodo = asyncHandler(async(req, res) => {
         throw new Error('Todo not found!')
     }
 
-    const updatedTodo = await Todo.findByIdAndUpdate(req.params.id, req.body,{new:false})
+    const user= await User.findById(req.user.id)
 
-    res.status(200).json(updatedTodo)
+    //check user
+    if(!user){
+        res.status(401)
+        throw new Error('User not found!')
+    }
+
+    //logged in user is same as todo user?
+    if(todo.user.toString()!==user.id){
+        res.status(401)
+        throw new Error('User not authorized!')
+    }
+
+    const toBeUpdatedTodo = await Todo.findByIdAndUpdate(req.params.id, req.body.todo,{new:false})
+    const updatedTodo = await Todo.findById(req.params.id)
+    res.status(200).json({old:toBeUpdatedTodo, new:updatedTodo})
 })
 
 // @desc    Delete Todo
@@ -54,6 +70,20 @@ const deleteTodo = asyncHandler(async(req, res) => {
     if(!todo){
         res.status(400)
         throw new Error('Todo not found!')
+    }
+
+    const user= await User.findById(req.user.id)
+
+    //check user
+    if(!user){
+        res.status(401)
+        throw new Error('User not found!')
+    }
+
+    //logged in user is same as todo user?
+    if(todo.user.toString()!==user.id){
+        res.status(401)
+        throw new Error('User not authorized!')
     }
 
     await todo.delete()
