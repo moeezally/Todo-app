@@ -40,7 +40,8 @@ const registerUser = asyncHandler(async(req,res)=>{
         res.status(201).json({
             _id: user._id,
             name: user.name,
-            email: user.email
+            email: user.email,
+            token: generateToken(user._id,user.email)
         })
     }
     else{
@@ -96,13 +97,7 @@ const loginUser = asyncHandler(async(req,res)=>{
 // @access  Private
 const getMe = asyncHandler(async(req,res)=>{
 
-    const{_id,name,email}=await User.findById(req.user.id)
-
-    res.json({
-        id: _id,
-        name,
-        email
-    })
+    res.json(req.user)
 
 })
 
